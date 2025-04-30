@@ -1,4 +1,6 @@
 const suncalc = require('suncalc');
+// new
+const { SunAzimuthCharacteristic } = require('./custom-characteristics');
 
 class SunAzimuthAccessory {
   constructor(platform, log, config, platformConfig) {
@@ -35,7 +37,10 @@ class SunAzimuthAccessory {
       .setCharacteristic(Characteristic.SerialNumber, '---');
 
     const SensorService = accessory.addService(Service.ContactSensor, config.name);
-
+    //
+    //
+    sensorService.addCharacteristic(SunAzimuthCharacteristic);
+    
     if (SensorService) {
       SensorService.getCharacteristic(Characteristic.ContactSensorState);
     }
@@ -67,6 +72,10 @@ class SunAzimuthAccessory {
       SensorService.setCharacteristic(Characteristic.ContactSensorState, this.updateState());
       setInterval(() => {
         SensorService.setCharacteristic(Characteristic.ContactSensorState, this.updateState());
+        //
+        const sunPos = SunCalc.getPosition(new Date(), config.latitude, config.longitude);
+        let azimuth = (sunPos.azimuth * 180 / Math.PI + 360) % 360;
+        SensorService.updateCharacteristic(SunAzimuthCharacteristic, azimuth);
       }, 10007);
     }
   }
@@ -85,6 +94,7 @@ class SunAzimuthAccessory {
     const sunPos = suncalc.getPosition(Date.now(), lat, long);
     let sunPosDegrees = Math.abs((sunPos.azimuth * 180) / Math.PI + 180);
     let sunPosAltitude = sunPos.altitude * 90 / (Math.PI / 2);
+
 
     if (platformConfig.debugLog)
       log(`${name}: Current azimuth: ${sunPosDegrees}°, altitude: ${sunPosAltitude}°`);
