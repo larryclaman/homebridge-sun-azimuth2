@@ -73,13 +73,25 @@ class SunAzimuthAccessory {
       setInterval(() => {
         SensorService.setCharacteristic(Characteristic.ContactSensorState, this.updateState());
         //
-        const sunPos = SunCalc.getPosition(new Date(), config.latitude, config.longitude);
-        let azimuth = (sunPos.azimuth * 180 / Math.PI + 360) % 360;
+        //const sunPos = SunCalc.getPosition(new Date(), config.latitude, config.longitude);
+        let azimuth = getAz();
         SensorService.updateCharacteristic(SunAzimuthCharacteristic, azimuth);
       }, 10007);
     }
   }
 
+  getAz() {
+    const { config, platformConfig, log } = this;
+    const { lat, long, apikey, enableWeatherIntegration, highestAcceptableOvercast } = platformConfig;
+    const { name, lowerThreshold, upperThreshold, minimumTemperatureCelsuisConsideredSunny, lowerAltitudeThreshold, upperAltitudeThreshold } = config;
+
+    const sunPos = suncalc.getPosition(Date.now(), lat, long);
+    let sunPosDegrees = Math.abs((sunPos.azimuth * 180) / Math.PI + 180);
+    let sunPosAltitude = sunPos.altitude * 90 / (Math.PI / 2);
+
+    return sunPosDegrees;
+  }
+  
   updateState() {
     const { config, platformConfig, log } = this;
     const { lat, long, apikey, enableWeatherIntegration, highestAcceptableOvercast } = platformConfig;
